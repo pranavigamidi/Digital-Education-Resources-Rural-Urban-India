@@ -567,14 +567,15 @@
           const ruralX = left + plotWidth * rural / 100;
           const urbanX = left + plotWidth * urban / 100;
           if (groups.Rural.schools && groups.Urban.schools) {
-            svg.appendChild(makeSvg("line", { x1: Math.min(ruralX, urbanX), y1: y, x2: Math.max(ruralX, urbanX), y2: y, stroke: "#c8d1cc", "stroke-width": 3, "stroke-linecap": "round" }));
+            svg.appendChild(makeSvg("line", { x1: ruralX, y1: y - 4, x2: urbanX, y2: y + 4, stroke: "#c8d1cc", "stroke-width": 2, "stroke-linecap": "round" }));
           }
           for (const area of visibleAreas) {
             const group = groups[area];
             if (!group.schools) continue;
             const value = metric.value(group);
             const x = left + plotWidth * value / 100;
-            svg.appendChild(makeSvg("circle", { cx: x, cy: y, r: 6, fill: areaColors[area], stroke: "#fff", "stroke-width": 2 }));
+            const dotY = visibleAreas.length === 2 ? y + (area === "Rural" ? -4 : 4) : y;
+            svg.appendChild(makeSvg("circle", { cx: x, cy: dotY, r: 6, fill: areaColors[area], stroke: "#fff", "stroke-width": 2 }));
           }
           if (visibleAreas.length === 2 && groups.Rural.schools && groups.Urban.schools) {
             const gap = rural - urban;
