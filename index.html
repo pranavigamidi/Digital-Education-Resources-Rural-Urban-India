@@ -438,6 +438,7 @@
             <section class="histogram-panel"><h4>Computers per school</h4><div class="histogram-summary" id="q5-computers-summary"></div><div class="histogram" id="q5-computers"></div></section>
             <section class="histogram-panel"><h4>Smart classrooms per school</h4><div class="histogram-summary" id="q5-classrooms-summary"></div><div class="histogram" id="q5-classrooms"></div></section>
           </div>
+          <div class="answer-callout" id="q5-answer" aria-live="polite"></div>
           <p class="question-footnote">Computer counts include only records with a recorded value. Each histogram uses 20 equal-width bins; filters update all four distributions.</p>
         </article>
       </div>
@@ -947,27 +948,38 @@
         })).sort((a, b) => b.count - a.count);
         const topState = ranked[0];
         const topCategory = categoryTotals[0];
+        const stateSummary = questionData.state_summary;
+        const averageTeachers = stateSummary.metrics.Average_Teachers;
         document.getElementById("q4-answer").textContent =
-          `Answer: ${topState.state} has the most records in the filtered sample (${number(topState.total)}). ${topCategory.category} is the largest school category overall in this sample (${number(topCategory.count)} records).`;
+          `Answer: ${topState.state} has the most records in the filtered sample (${number(topState.total)}). ${topCategory.category} is the largest school category in the filtered sample (${number(topCategory.count)} records). The separate state summary covers ${number(stateSummary.state_count)} states and reports an average of ${number(averageTeachers.mean, 2)} teachers per state (range ${number(averageTeachers.min, 2)}–${number(averageTeachers.max, 2)}).`;
       }
 
       function renderHistogram(containerId, summaryId, metric, groups) {
         const spec = questionData.distribution_specs[metric];
         const counts = Array(spec.bins).fill(0);
-        let sampleCount = 0;
+        const summary = groups.reduce((total, group) => {
+          const item = group.distribution_summary[metric];
+          total.sum += item.sum;
+          total.count += item.count;
+          if (item.count) {
+            total.min = total.min === null ? item.min : Math.min(total.min, item.min);
+            total.max = total.max === null ? item.max : Math.max(total.max, item.max);
+          }
+          return total;
+        }, { sum: 0, count: 0, min: null, max: null });
         for (const group of groups) {
           const bins = group.distributions[metric];
           bins.forEach((count, index) => { counts[index] += count; });
-          sampleCount += group.measurement_counts[metric];
         }
-        const summary = document.getElementById(summaryId);
+        const summaryElement = document.getElementById(summaryId);
         const container = document.getElementById(containerId);
         container.replaceChildren();
-        if (!sampleCount) {
-          summary.textContent = "No measured values for these filters.";
+        if (!summary.count) {
+          summaryElement.textContent = "No measured values for these filters.";
           return;
         }
-        summary.textContent = `${number(sampleCount)} measured records · range ${number(spec.min, 1)}–${number(spec.max, 1)}`;
+        const decimals = metric === "internet_access" || metric === "readiness" ? 2 : 1;
+        summaryElement.textContent = `${number(summary.count)} measured · avg ${number(summary.sum / summary.count, decimals)} · range ${number(summary.min, decimals)}–${number(summary.max, decimals)}`;
         const width = 560;
         const height = 126;
         const left = 28;
@@ -1001,6 +1013,29 @@
         renderHistogram("q5-access", "q5-access-summary", "internet_access", groups);
         renderHistogram("q5-computers", "q5-computers-summary", "computers", groups);
         renderHistogram("q5-classrooms", "q5-classrooms-summary", "smart_classrooms", groups);
+        const summarize = metric => groups.reduce((total, group) => {
+          const item = group.distribution_summary[metric];
+          total.sum += item.sum;
+          total.count += item.count;
+          if (item.count) {
+            total.min = total.min === null ? item.min : Math.min(total.min, item.min);
+            total.max = total.max === null ? item.max : Math.max(total.max, item.max);
+          }
+          return total;
+        }, { sum: 0, count: 0, min: null, max: null });
+        const readiness = summarize("readiness");
+        const access = summarize("internet_access");
+        const computers = summarize("computers");
+        const classrooms = summarize("smart_classrooms");
+        if (!readiness.count || !access.count || !classrooms.count) {
+          document.getElementById("q5-answer").textContent = "Not enough measured records to summarize the selected filters.";
+          return;
+        }
+        const computerSummary = computers.count
+          ? `${number(computers.count)} recorded computer counts averaged ${number(computers.sum / computers.count, 1)} computers per school (range ${number(computers.min, 1)}–${number(computers.max, 1)}).`
+          : "No computer counts are recorded for the selected filters.";
+        document.getElementById("q5-answer").textContent =
+          `Answer: the selected schools average ${number(readiness.sum / readiness.count, 2)} for digital readiness (range ${number(readiness.min, 2)}–${number(readiness.max, 2)}) and ${number(access.sum / access.count, 2)}% for internet access (range ${number(access.min, 2)}–${number(access.max, 2)}). ${computerSummary} Smart classrooms average ${number(classrooms.sum / classrooms.count, 1)} per school (range ${number(classrooms.min, 1)}–${number(classrooms.max, 1)}). The histograms show how those values are distributed across the sample.`;
       }
 
       function renderReadiness(rows) {
