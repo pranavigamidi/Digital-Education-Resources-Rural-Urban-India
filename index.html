@@ -215,6 +215,33 @@
     .chart { width: 100%; margin-top: 17px; }
     .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
     .chart-empty { padding: 35px 5px; color: var(--muted); font-size: 12px; text-align: center; }
+    .question-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; margin: 18px 0 30px; }
+    .question-card { min-width: 0; padding: 21px; border: 1px solid var(--line); border-radius: 15px; background: var(--card); box-shadow: var(--shadow); }
+    .question-card.wide { grid-column: 1 / -1; }
+    .question-title { display: flex; align-items: flex-start; gap: 12px; }
+    .question-number { flex: 0 0 32px; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 10px; background: var(--green-soft); color: var(--green); font-size: 12px; font-weight: 800; }
+    .question-title h3 { margin: 2px 0 5px; font-size: 14px; letter-spacing: -.02em; }
+    .question-title p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.6; }
+    .answer-callout { margin-top: 16px; padding: 14px 15px; border-left: 3px solid var(--green); border-radius: 0 9px 9px 0; background: #f3f7f3; color: #45564d; font-size: 11px; line-height: 1.7; }
+    .answer-callout strong { color: var(--ink); }
+    .answer-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin-top: 17px; }
+    .answer-stat { padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+    .answer-stat-label { color: var(--muted); font-size: 9px; font-weight: 650; }
+    .answer-stat-value { margin-top: 6px; font-size: 22px; font-weight: 750; letter-spacing: -.04em; }
+    .answer-stat-note { margin-top: 3px; color: var(--muted); font-size: 9px; }
+    .cleaning-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
+    .cleaning-row { padding: 13px; border: 1px solid var(--line); border-radius: 10px; }
+    .cleaning-name { font-size: 11px; font-weight: 700; }
+    .cleaning-numbers { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-top: 9px; }
+    .cleaning-before { color: #bd654f; font-size: 17px; font-weight: 750; }
+    .cleaning-after { color: var(--green); font-size: 17px; font-weight: 750; }
+    .cleaning-label { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; }
+    .histogram-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 15px; }
+    .histogram-panel { min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 11px; background: #fcfdfb; }
+    .histogram-panel h4 { margin: 0; font-size: 11px; }
+    .histogram-summary { margin-top: 4px; color: var(--muted); font-size: 9px; }
+    .histogram { margin-top: 8px; }
+    .question-footnote { margin: 12px 0 0; color: var(--muted); font-size: 9px; line-height: 1.65; }
     .legend { display: flex; flex-wrap: wrap; gap: 13px; margin-top: 7px; }
     .legend-item { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 10px; }
     .legend-swatch { width: 9px; height: 9px; border-radius: 50%; }
@@ -273,6 +300,8 @@
     @media (max-width: 820px) {
       .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .chart-grid { grid-template-columns: 1fr; }
+      .question-grid { grid-template-columns: 1fr; }
+      .question-card.wide { grid-column: auto; }
     }
     @media (max-width: 580px) {
       .site-header { height: 64px; padding: 0 17px; }
@@ -290,6 +319,11 @@
       .kpi-value { font-size: 26px; }
       .kpi-label { font-size: 10px; }
       .panel { padding: 16px 13px; }
+      .question-card { padding: 16px 13px; }
+      .histogram-grid { grid-template-columns: 1fr; }
+      .answer-stats { gap: 6px; }
+      .answer-stat { padding: 10px 8px; }
+      .answer-stat-value { font-size: 19px; }
       .about-grid { grid-template-columns: 1fr; }
       .section-heading p { max-width: 48%; text-align: right; }
       .site-footer { flex-direction: column; }
@@ -306,7 +340,7 @@
       <span class="brand-mark" aria-hidden="true">SC</span>
       <span><span class="brand-name">Schooling, Connected</span><br><span class="brand-note">Digital access in India</span></span>
     </a>
-    <a class="header-link" href="#about">ABOUT THE DATA <span aria-hidden="true">↗</span></a>
+    <a class="header-link" href="#question-answers">THE 5 QUESTIONS <span aria-hidden="true">↘</span></a>
   </header>
 
   <main>
@@ -347,6 +381,66 @@
         <p id="filter-summary">Project dataset</p>
       </div>
       <div class="kpi-grid" id="kpis" aria-live="polite"></div>
+    </section>
+
+    <section id="question-answers" aria-labelledby="questions-heading">
+      <div class="section-heading">
+        <h2 id="questions-heading">The five questions, answered</h2>
+        <p>Each answer corresponds to a question in the analysis notebook.</p>
+      </div>
+      <div class="question-grid">
+        <article class="question-card" aria-labelledby="q1-heading">
+          <div class="question-title">
+            <span class="question-number">Q1</span>
+            <div><h3 id="q1-heading">What is the internet access level across schools?</h3><p>Mean, maximum, and minimum internet access percentage.</p></div>
+          </div>
+          <div id="q1-stats" class="answer-stats"></div>
+          <div class="answer-callout" id="q1-answer" aria-live="polite"></div>
+        </article>
+
+        <article class="question-card" aria-labelledby="q2-heading">
+          <div class="question-title">
+            <span class="question-number">Q2</span>
+            <div><h3 id="q2-heading">How are schools distributed across rural and urban areas?</h3><p>Counts and percentages are compared side by side. The location filter does not hide either group.</p></div>
+          </div>
+          <div class="chart" id="q2-chart" aria-label="Rural and urban school counts"></div>
+          <div class="answer-callout" id="q2-answer" aria-live="polite"></div>
+        </article>
+
+        <article class="question-card" aria-labelledby="q3-heading">
+          <div class="question-title">
+            <span class="question-number">Q3</span>
+            <div><h3 id="q3-heading">What happened to missing data after cleaning?</h3><p>Notebook-reported missing cells before cleaning and after imputation.</p></div>
+          </div>
+          <div id="q3-cleaning" class="cleaning-grid"></div>
+          <div class="answer-callout" id="q3-answer"></div>
+          <p class="question-footnote">Before-cleaning totals are the values recorded in the notebook. The published final datasets used for the dashboard are already cleaned.</p>
+        </article>
+
+        <article class="question-card" aria-labelledby="q4-heading">
+          <div class="question-title">
+            <span class="question-number">Q4</span>
+            <div><h3 id="q4-heading">How do school counts vary by state and school category?</h3><p>Top states, with each bar divided by school category.</p></div>
+          </div>
+          <div class="chart-legend" id="q4-legend"></div>
+          <div class="chart" id="q4-chart" aria-label="State school counts split by school category"></div>
+          <div class="answer-callout" id="q4-answer" aria-live="polite"></div>
+        </article>
+
+        <article class="question-card wide" aria-labelledby="q5-heading">
+          <div class="question-title">
+            <span class="question-number">Q5</span>
+            <div><h3 id="q5-heading">What do the digital-readiness and resource distributions look like?</h3><p>Histograms show how many school records fall into each value range.</p></div>
+          </div>
+          <div class="histogram-grid">
+            <section class="histogram-panel"><h4>Digital readiness score</h4><div class="histogram-summary" id="q5-readiness-summary"></div><div class="histogram" id="q5-readiness"></div></section>
+            <section class="histogram-panel"><h4>Internet access percentage</h4><div class="histogram-summary" id="q5-access-summary"></div><div class="histogram" id="q5-access"></div></section>
+            <section class="histogram-panel"><h4>Computers per school</h4><div class="histogram-summary" id="q5-computers-summary"></div><div class="histogram" id="q5-computers"></div></section>
+            <section class="histogram-panel"><h4>Smart classrooms per school</h4><div class="histogram-summary" id="q5-classrooms-summary"></div><div class="histogram" id="q5-classrooms"></div></section>
+          </div>
+          <p class="question-footnote">Computer counts include only records with a recorded value. Each histogram uses 20 equal-width bins; filters update all four distributions.</p>
+        </article>
+      </div>
     </section>
 
     <section aria-labelledby="analysis-heading">
@@ -428,6 +522,7 @@
       const loading = document.getElementById("loading");
       const svgNS = "http://www.w3.org/2000/svg";
       let records = [];
+      let questionData = null;
 
       function number(value, decimals = 0) {
         return new Intl.NumberFormat("en-IN", {
@@ -668,6 +763,246 @@
         container.appendChild(svg);
       }
 
+      function questionGroups(ignoreArea = false) {
+        return questionData.groups.filter(group =>
+          (ignoreArea || areaFilter.value === "All" || group.area === areaFilter.value) &&
+          (categoryFilter.value === "All" || group.category === categoryFilter.value)
+        );
+      }
+
+      function appendAnswerStat(container, label, value, note) {
+        const card = document.createElement("div");
+        card.className = "answer-stat";
+        const title = document.createElement("div");
+        title.className = "answer-stat-label";
+        title.textContent = label;
+        const result = document.createElement("div");
+        result.className = "answer-stat-value";
+        result.textContent = value;
+        const detail = document.createElement("div");
+        detail.className = "answer-stat-note";
+        detail.textContent = note;
+        card.append(title, result, detail);
+        container.appendChild(card);
+      }
+
+      function renderQuestionOne(groups) {
+        const access = groups.reduce((total, group) => {
+          total.sum += group.access.sum;
+          total.count += group.access.count;
+          if (group.access.count) {
+            total.min = total.min === null ? group.access.min : Math.min(total.min, group.access.min);
+            total.max = total.max === null ? group.access.max : Math.max(total.max, group.access.max);
+          }
+          return total;
+        }, { sum: 0, count: 0, min: null, max: null });
+        const cards = document.getElementById("q1-stats");
+        cards.replaceChildren();
+        const answer = document.getElementById("q1-answer");
+        if (!access.count) {
+          answer.textContent = "No internet access records match these filters.";
+          return;
+        }
+        appendAnswerStat(cards, "Average", `${number(access.sum / access.count, 2)}%`, `${number(access.count)} school records`);
+        appendAnswerStat(cards, "Highest", `${number(access.max, 2)}%`, "maximum recorded value");
+        appendAnswerStat(cards, "Lowest", `${number(access.min, 2)}%`, "minimum recorded value");
+        answer.textContent = `Answer: the average internet access percentage is ${number(access.sum / access.count, 2)}%, with values ranging from ${number(access.min, 2)}% to ${number(access.max, 2)}%.`;
+      }
+
+      function renderQuestionTwo() {
+        const rows = questionGroups(true);
+        const totals = ["Rural", "Urban"].map(area => ({
+          area,
+          schools: rows.filter(group => group.area === area).reduce((sum, group) => sum + group.schools, 0)
+        }));
+        const total = totals.reduce((sum, row) => sum + row.schools, 0);
+        const container = document.getElementById("q2-chart");
+        container.replaceChildren();
+        const answer = document.getElementById("q2-answer");
+        if (!total) {
+          answer.textContent = "No school records match the selected category.";
+          return;
+        }
+        const svg = makeSvg("svg", { viewBox: "0 0 560 108", role: "img", "aria-label": "Rural and urban school counts and percentages" });
+        const left = 70;
+        const plotWidth = 360;
+        for (let tick = 0; tick <= 4; tick++) {
+          const x = left + plotWidth * tick / 4;
+          svg.appendChild(makeSvg("line", { x1: x, y1: 5, x2: x, y2: 78, stroke: "#edf0ed", "stroke-width": 1 }));
+          text(svg, number(total * tick / 4), x, 100, { fill: "#829088", "font-size": 8, "text-anchor": "middle" });
+        }
+        totals.forEach((row, index) => {
+          const y = 20 + index * 36;
+          const width = plotWidth * row.schools / total;
+          text(svg, row.area, left - 10, y + 9, { fill: "#46564e", "font-size": 10, "font-weight": 700, "text-anchor": "end" });
+          svg.appendChild(makeSvg("rect", { x: left, y, width: plotWidth, height: 13, rx: 6, fill: "#f0f3f0" }));
+          svg.appendChild(makeSvg("rect", { x: left, y, width, height: 13, rx: 6, fill: areaColors[row.area] }));
+          text(svg, `${number(row.schools)} · ${number(row.schools / total * 100, 2)}%`, left + plotWidth + 9, y + 10, { fill: areaColors[row.area], "font-size": 9, "font-weight": 700 });
+        });
+        container.appendChild(svg);
+        const rural = totals.find(row => row.area === "Rural");
+        const urban = totals.find(row => row.area === "Urban");
+        answer.textContent = `Answer: the filtered sample contains ${number(rural.schools)} rural schools (${number(rural.schools / total * 100, 2)}%) and ${number(urban.schools)} urban schools (${number(urban.schools / total * 100, 2)}%).`;
+      }
+
+      function renderQuestionThree() {
+        const counts = questionData.missing_values;
+        const rows = [
+          ["Infrastructure", counts.infrastructure_before, counts.infrastructure_after],
+          ["Digital resources", counts.resources_before, counts.resources_after]
+        ];
+        const container = document.getElementById("q3-cleaning");
+        container.replaceChildren();
+        for (const [name, before, after] of rows) {
+          const row = document.createElement("div");
+          row.className = "cleaning-row";
+          const title = document.createElement("div");
+          title.className = "cleaning-name";
+          title.textContent = name;
+          const values = document.createElement("div");
+          values.className = "cleaning-numbers";
+          const beforeValue = document.createElement("div");
+          beforeValue.className = "cleaning-before";
+          beforeValue.textContent = number(before);
+          const beforeLabel = document.createElement("span");
+          beforeLabel.className = "cleaning-label";
+          beforeLabel.textContent = "missing before";
+          beforeValue.appendChild(beforeLabel);
+          const afterValue = document.createElement("div");
+          afterValue.className = "cleaning-after";
+          afterValue.textContent = number(after);
+          const afterLabel = document.createElement("span");
+          afterLabel.className = "cleaning-label";
+          afterLabel.textContent = "missing after";
+          afterValue.appendChild(afterLabel);
+          values.append(beforeValue, afterValue);
+          row.append(title, values);
+          container.appendChild(row);
+        }
+        document.getElementById("q3-answer").textContent =
+          `Answer: the notebook reports ${number(counts.infrastructure_before + counts.resources_before)} missing values before cleaning. After imputation, both datasets have 0 missing values.`;
+      }
+
+      function renderQuestionFour(rows) {
+        const categories = [...new Set(records.map(row => row.category))].sort();
+        const totals = new Map();
+        for (const row of rows) {
+          if (!totals.has(row.state)) totals.set(row.state, Object.fromEntries(categories.map(category => [category, 0])));
+          totals.get(row.state)[row.category] += row.schools;
+        }
+        const ranked = [...totals.entries()]
+          .map(([state, counts]) => ({ state, counts, total: Object.values(counts).reduce((sum, value) => sum + value, 0) }))
+          .sort((a, b) => b.total - a.total || a.state.localeCompare(b.state))
+          .slice(0, 10);
+        const legend = document.getElementById("q4-legend");
+        legend.replaceChildren();
+        categories.forEach((category, index) => {
+          const item = document.createElement("span");
+          item.className = "legend-item";
+          const swatch = document.createElement("span");
+          swatch.className = "legend-swatch";
+          swatch.style.background = categoryColors[index % categoryColors.length];
+          const label = document.createElement("span");
+          label.textContent = category;
+          item.append(swatch, label);
+          legend.appendChild(item);
+        });
+        const container = document.getElementById("q4-chart");
+        container.replaceChildren();
+        if (!ranked.length) {
+          container.textContent = "No state/category records match these filters.";
+          return;
+        }
+        const width = 700;
+        const left = 164;
+        const plotWidth = 405;
+        const max = Math.max(...ranked.map(item => item.total));
+        const rowHeight = 25;
+        const height = ranked.length * rowHeight + 31;
+        const svg = makeSvg("svg", { viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": "Top ten states with school counts stacked by school category" });
+        for (let tick = 0; tick <= 4; tick++) {
+          const value = max * tick / 4;
+          const x = left + plotWidth * value / max;
+          svg.appendChild(makeSvg("line", { x1: x, y1: 4, x2: x, y2: height - 13, stroke: "#edf0ed", "stroke-width": 1 }));
+          text(svg, number(value), x, height - 1, { fill: "#829088", "font-size": 8, "text-anchor": "middle" });
+        }
+        ranked.forEach((item, index) => {
+          const y = 10 + index * rowHeight;
+          text(svg, item.state, left - 9, y + 10, { fill: "#46564e", "font-size": 9, "text-anchor": "end" });
+          let x = left;
+          item.counts && categories.forEach((category, categoryIndex) => {
+            const value = item.counts[category];
+            const segmentWidth = plotWidth * value / max;
+            if (segmentWidth > 0) {
+              svg.appendChild(makeSvg("rect", { x, y, width: segmentWidth, height: 13, rx: 2, fill: categoryColors[categoryIndex % categoryColors.length] }));
+              x += segmentWidth;
+            }
+          });
+          text(svg, number(item.total), left + plotWidth + 9, y + 10, { fill: "#46564e", "font-size": 9, "font-weight": 700 });
+        });
+        container.appendChild(svg);
+        const categoryTotals = categories.map(category => ({
+          category,
+          count: rows.reduce((sum, row) => sum + (row.category === category ? row.schools : 0), 0)
+        })).sort((a, b) => b.count - a.count);
+        const topState = ranked[0];
+        const topCategory = categoryTotals[0];
+        document.getElementById("q4-answer").textContent =
+          `Answer: ${topState.state} has the most records in the filtered sample (${number(topState.total)}). ${topCategory.category} is the largest school category overall in this sample (${number(topCategory.count)} records).`;
+      }
+
+      function renderHistogram(containerId, summaryId, metric, groups) {
+        const spec = questionData.distribution_specs[metric];
+        const counts = Array(spec.bins).fill(0);
+        let sampleCount = 0;
+        for (const group of groups) {
+          const bins = group.distributions[metric];
+          bins.forEach((count, index) => { counts[index] += count; });
+          sampleCount += group.measurement_counts[metric];
+        }
+        const summary = document.getElementById(summaryId);
+        const container = document.getElementById(containerId);
+        container.replaceChildren();
+        if (!sampleCount) {
+          summary.textContent = "No measured values for these filters.";
+          return;
+        }
+        summary.textContent = `${number(sampleCount)} measured records · range ${number(spec.min, 1)}–${number(spec.max, 1)}`;
+        const width = 560;
+        const height = 126;
+        const left = 28;
+        const top = 8;
+        const plotWidth = 520;
+        const plotHeight = 82;
+        const maxCount = Math.max(1, ...counts);
+        const svg = makeSvg("svg", { viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": `${spec.label} distribution histogram` });
+        for (let tick = 0; tick <= 2; tick++) {
+          const value = maxCount * tick / 2;
+          const y = top + plotHeight - plotHeight * value / maxCount;
+          svg.appendChild(makeSvg("line", { x1: left, y1: y, x2: left + plotWidth, y2: y, stroke: "#edf0ed", "stroke-width": 1 }));
+          text(svg, number(value), left - 5, y + 3, { fill: "#829088", "font-size": 7, "text-anchor": "end" });
+        }
+        const gap = 2;
+        const barWidth = plotWidth / counts.length - gap;
+        counts.forEach((count, index) => {
+          const barHeight = plotHeight * count / maxCount;
+          const x = left + index * (plotWidth / counts.length) + gap / 2;
+          const y = top + plotHeight - barHeight;
+          svg.appendChild(makeSvg("rect", { x, y, width: barWidth, height: Math.max(1, barHeight), rx: 2, fill: "#6b8de3" }));
+        });
+        text(svg, number(spec.min, 1), left, 111, { fill: "#829088", "font-size": 8, "text-anchor": "start" });
+        text(svg, number((spec.min + spec.max) / 2, 1), left + plotWidth / 2, 111, { fill: "#829088", "font-size": 8, "text-anchor": "middle" });
+        text(svg, number(spec.max, 1), left + plotWidth, 111, { fill: "#829088", "font-size": 8, "text-anchor": "end" });
+        container.appendChild(svg);
+      }
+
+      function renderQuestionFive(groups) {
+        renderHistogram("q5-readiness", "q5-readiness-summary", "readiness", groups);
+        renderHistogram("q5-access", "q5-access-summary", "internet_access", groups);
+        renderHistogram("q5-computers", "q5-computers-summary", "computers", groups);
+        renderHistogram("q5-classrooms", "q5-classrooms-summary", "smart_classrooms", groups);
+      }
+
       function renderReadiness(rows) {
         const byState = new Map();
         for (const row of rows) {
@@ -710,7 +1045,13 @@
           (areaFilter.value === "All" || row.area === areaFilter.value) &&
           (category === "All" || row.category === category)
         );
+        const questionRows = questionGroups();
         renderKpis(rows, aggregate(records).schools);
+        renderQuestionOne(questionRows);
+        renderQuestionTwo();
+        renderQuestionThree();
+        renderQuestionFour(rows);
+        renderQuestionFive(questionRows);
         renderLegend();
         renderAreaChart(rows);
         const stateTotals = new Map();
@@ -736,7 +1077,9 @@
           if (!response.ok) throw new Error(`Could not load dashboard data (HTTP ${response.status}).`);
           const data = await response.json();
           if (!Array.isArray(data.records) || data.records.length === 0) throw new Error("Dashboard data is empty or invalid.");
+          if (!data.question_data || !Array.isArray(data.question_data.groups)) throw new Error("Question answer data is missing or invalid.");
           records = data.records;
+          questionData = data.question_data;
           selectOptions(areaFilter, [...new Set(records.map(row => row.area))].sort(), "All locations");
           selectOptions(categoryFilter, [...new Set(records.map(row => row.category))].sort(), "All categories");
           areaFilter.addEventListener("change", render);

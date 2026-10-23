@@ -2,7 +2,7 @@
 
 An exploratory data analysis of digital education resource availability and accessibility across rural and urban India, identifying regional disparities and patterns across states and school types to understand gaps in digital learning infrastructure.
 
-This repository also serves a standalone interactive dashboard from `index.html`, with aggregated project data in `data/dashboard-data.json`. Visitors do not need Python, Jupyter, or a local server. Student names and roll numbers are not included in the public dashboard.
+This repository also serves a standalone interactive dashboard from `index.html`, with aggregated project data in `data/dashboard-data.json`. Its “The five questions, answered” section presents each notebook question individually, including internet access statistics, rural/urban counts, missing-data results, state/category breakdowns, and resource distributions. Visitors do not need Python, Jupyter, or a local server. Student names and roll numbers are not included in the public dashboard.
 
 ## Enable GitHub Pages
 
