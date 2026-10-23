@@ -357,18 +357,18 @@
       <div class="chart-grid">
         <article class="panel">
           <div class="panel-head">
-            <div><h3>Rural &amp; urban, side by side</h3><p class="panel-subtitle">Each line joins both location averages; the distance between dots shows the gap.</p></div>
+            <div><h3>Rural &amp; urban, side by side</h3><p class="panel-subtitle">Grouped bars compare school internet connection and average scores.</p></div>
             <span class="chart-badge">RURAL / URBAN</span>
           </div>
           <div class="chart-legend" id="area-legend"></div>
-          <div class="chart" id="area-chart" aria-label="Rural and urban paired-dot comparison"></div>
+          <div class="chart" id="area-chart" aria-label="Grouped rural and urban bar chart"></div>
         </article>
         <article class="panel">
           <div class="panel-head">
-            <div><h3>School records by state</h3><p class="panel-subtitle">A ranked lollipop plot. Longer stems indicate more records in this sample.</p></div>
+            <div><h3>School records by state</h3><p class="panel-subtitle">States ranked by the number of school records in this sample.</p></div>
             <span class="chart-badge">TOP 8 STATES</span>
           </div>
-          <div class="chart" id="state-chart" aria-label="Ranked lollipop plot of state school records"></div>
+          <div class="chart" id="state-chart" aria-label="Horizontal bar chart of state school records"></div>
         </article>
         <article class="panel">
           <div class="panel-head">
@@ -382,10 +382,10 @@
         </article>
         <article class="panel">
           <div class="panel-head">
-            <div><h3>Readiness across states</h3><p class="panel-subtitle">States ranked by average readiness score in the filtered sample.</p></div>
+            <div><h3>Readiness across states</h3><p class="panel-subtitle">States ranked by their average readiness score in the filtered sample.</p></div>
             <span class="chart-badge">TOP 8 · / 100</span>
           </div>
-          <div class="chart" id="readiness-chart" aria-label="Ranked state digital readiness dot plot"></div>
+          <div class="chart" id="readiness-chart" aria-label="Horizontal bar chart of state digital readiness"></div>
         </article>
       </div>
     </section>
@@ -550,47 +550,35 @@
           return;
         }
         const width = 600;
-        const left = 142;
-        const plotWidth = 330;
-        const height = 178;
-        const svg = makeSvg("svg", { viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": "Paired rural and urban comparison of school internet connection, access score, and digital readiness" });
+        const labelX = 130;
+        const left = 146;
+        const plotWidth = 336;
+        const rowHeight = 53;
+        const height = metricRows.length * rowHeight + 34;
+        const svg = makeSvg("svg", { viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": "Grouped horizontal bars comparing rural and urban internet connection and digital access scores" });
         for (let tick = 0; tick <= 100; tick += 25) {
           const x = left + plotWidth * tick / 100;
-          svg.appendChild(makeSvg("line", { x1: x, y1: 19, x2: x, y2: 144, stroke: "#edf0ed", "stroke-width": 1 }));
-          text(svg, `${tick}%`, x, 166, { fill: "#829088", "font-size": 9, "text-anchor": "middle" });
+          svg.appendChild(makeSvg("line", { x1: x, y1: 8, x2: x, y2: height - 24, stroke: "#edf0ed", "stroke-width": 1 }));
+          text(svg, `${tick}%`, x, height - 5, { fill: "#829088", "font-size": 9, "text-anchor": "middle" });
         }
         metricRows.forEach((metric, index) => {
-          const y = 40 + index * 43;
-          text(svg, metric.label, left - 12, y + 4, { fill: "#46564e", "font-size": 10, "text-anchor": "end" });
-          const rural = metric.value(groups.Rural);
-          const urban = metric.value(groups.Urban);
-          const ruralX = left + plotWidth * rural / 100;
-          const urbanX = left + plotWidth * urban / 100;
-          if (groups.Rural.schools && groups.Urban.schools) {
-            svg.appendChild(makeSvg("line", { x1: ruralX, y1: y - 4, x2: urbanX, y2: y + 4, stroke: "#c8d1cc", "stroke-width": 2, "stroke-linecap": "round" }));
-          }
+          const baseY = 15 + index * rowHeight;
+          text(svg, metric.label, labelX, baseY + 16, { fill: "#46564e", "font-size": 9, "font-weight": 700, "text-anchor": "end" });
           for (const area of visibleAreas) {
             const group = groups[area];
             if (!group.schools) continue;
             const value = metric.value(group);
-            const x = left + plotWidth * value / 100;
-            const dotY = visibleAreas.length === 2 ? y + (area === "Rural" ? -4 : 4) : y;
-            svg.appendChild(makeSvg("circle", { cx: x, cy: dotY, r: 6, fill: areaColors[area], stroke: "#fff", "stroke-width": 2 }));
-          }
-          if (visibleAreas.length === 2 && groups.Rural.schools && groups.Urban.schools) {
-            const gap = rural - urban;
-            const gapText = `${gap > 0 ? "+" : ""}${number(gap, 1)} pp`;
-            text(svg, gapText, 493, y + 4, { fill: "#59675f", "font-size": 10, "font-weight": 700 });
-          } else {
-            const area = visibleAreas.find(location => groups[location].schools);
-            const value = metric.value(groups[area]);
-            text(svg, `${number(value, 1)}%`, 493, y + 4, { fill: areaColors[area], "font-size": 10, "font-weight": 700 });
+            const y = baseY + (visibleAreas.length === 2 && area === "Urban" ? 27 : 8);
+            const barWidth = plotWidth * Math.min(value, 100) / 100;
+            svg.appendChild(makeSvg("rect", { x: left, y, width: plotWidth, height: 10, rx: 5, fill: "#f0f3f0" }));
+            svg.appendChild(makeSvg("rect", { x: left, y, width: barWidth, height: 10, rx: 5, fill: areaColors[area] }));
+            text(svg, `${number(value, 1)}%`, left + plotWidth + 8, y + 9, { fill: areaColors[area], "font-size": 9, "font-weight": 700 });
           }
         });
         container.appendChild(svg);
       }
 
-      function renderLollipop(containerId, items, label, color, options = {}) {
+      function renderBarChart(containerId, items, label, color, options = {}) {
         const container = document.getElementById(containerId);
         container.replaceChildren();
         if (!items.length) {
@@ -601,8 +589,8 @@
           return;
         }
         const width = 600;
-        const left = 150;
-        const plotWidth = 380;
+        const left = options.left || 165;
+        const plotWidth = options.plotWidth || 345;
         const rowHeight = 27;
         const height = items.length * rowHeight + 32;
         const max = options.domainMax || Math.max(1, ...items.map(item => item.value));
@@ -617,11 +605,11 @@
         items.forEach((item, index) => {
           const y = 13 + index * rowHeight;
           const barWidth = plotWidth * item.value / max;
-          text(svg, item.name, left - 11, y + 4, { fill: "#46564e", "font-size": 9, "text-anchor": "end" });
-          svg.appendChild(makeSvg("line", { x1: left, y1: y, x2: left + barWidth, y2: y, stroke: "#dfe7e1", "stroke-width": 2 }));
-          svg.appendChild(makeSvg("circle", { cx: left + barWidth, cy: y, r: 5, fill: color, stroke: "#fff", "stroke-width": 1.5 }));
+          text(svg, item.name, left - 11, y + 9, { fill: "#46564e", "font-size": 9, "text-anchor": "end" });
+          svg.appendChild(makeSvg("rect", { x: left, y, width: plotWidth, height: 12, rx: 6, fill: "#f0f3f0" }));
+          svg.appendChild(makeSvg("rect", { x: left, y, width: barWidth, height: 12, rx: 6, fill: color }));
           const value = options.percent ? `${number(item.value, 1)}%` : number(item.value);
-          text(svg, value, left + plotWidth + 9, y + 4, { fill: "#46564e", "font-size": 9, "font-weight": 700 });
+          text(svg, value, left + plotWidth + 9, y + 9, { fill: "#46564e", "font-size": 9, "font-weight": 700 });
         });
         container.appendChild(svg);
       }
@@ -696,7 +684,7 @@
           .map(([name, group]) => ({ name, value: group.metric_sum / group.metric_count }))
           .sort((a, b) => b.value - a.value || a.name.localeCompare(b.name))
           .slice(0, 8);
-        renderLollipop("readiness-chart", topStates, "Top eight states by average digital readiness score", "#26735c", { domainMax: 100 });
+        renderBarChart("readiness-chart", topStates, "Top eight states by average digital readiness score", "#26735c", { domainMax: 100 });
       }
 
       function renderInsight(rows) {
@@ -731,7 +719,7 @@
           .map(([name, value]) => ({ name, value }))
           .sort((a, b) => b.value - a.value || a.name.localeCompare(b.name))
           .slice(0, 8);
-        renderLollipop("state-chart", states, "Top eight states by school record count", "#6b8de3");
+        renderBarChart("state-chart", states, "Top eight states by school record count", "#6b8de3");
         const categoryTotals = new Map();
         for (const row of rows) categoryTotals.set(row.category, (categoryTotals.get(row.category) || 0) + row.schools);
         const categories = [...categoryTotals.entries()]
