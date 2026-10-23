@@ -1221,7 +1221,10 @@
 
       async function start() {
         try {
-          const response = await fetch("./data/dashboard-data.json", { cache: "no-cache" });
+          let response = await fetch("./api/dashboard", { cache: "no-cache" });
+          if (response.status === 404) {
+            response = await fetch("./data/dashboard-data.json", { cache: "no-cache" });
+          }
           if (!response.ok) throw new Error(`Could not load dashboard data (HTTP ${response.status}).`);
           const data = await response.json();
           if (!Array.isArray(data.records) || data.records.length === 0) throw new Error("Dashboard data is empty or invalid.");

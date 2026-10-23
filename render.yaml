@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: schooling-connected-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DASHBOARD_DATA_PATH
+        value: data/dashboard-data.json
+      - key: CORS_ORIGINS
+        value: https://pranavigamidi.github.io
