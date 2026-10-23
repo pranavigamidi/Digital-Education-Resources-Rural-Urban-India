@@ -236,11 +236,22 @@
     .cleaning-before { color: #bd654f; font-size: 17px; font-weight: 750; }
     .cleaning-after { color: var(--green); font-size: 17px; font-weight: 750; }
     .cleaning-label { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; }
+    .field-count-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px 12px; margin-top: 13px; }
+    .field-count { display: flex; justify-content: space-between; gap: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 9px; }
+    .field-count strong { color: var(--ink); font-weight: 700; white-space: nowrap; }
     .histogram-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 15px; }
+    .count-chart-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 15px; }
     .histogram-panel { min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 11px; background: #fcfdfb; }
     .histogram-panel h4 { margin: 0; font-size: 11px; }
     .histogram-summary { margin-top: 4px; color: var(--muted); font-size: 9px; }
     .histogram { margin-top: 8px; }
+    .q4-chart-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 15px; }
+    .table-wrap { max-height: 430px; margin-top: 15px; overflow: auto; border: 1px solid var(--line); border-radius: 10px; }
+    .answer-table { width: 100%; min-width: 850px; border-collapse: collapse; font-size: 10px; text-align: right; }
+    .answer-table th, .answer-table td { padding: 9px 11px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    .answer-table th { position: sticky; top: 0; z-index: 1; background: #f3f7f3; color: #526159; font-weight: 750; }
+    .answer-table th:first-child, .answer-table td:first-child, .answer-table th:nth-child(2), .answer-table td:nth-child(2) { text-align: left; }
+    .answer-table tbody tr:last-child td { border-bottom: 0; }
     .question-footnote { margin: 12px 0 0; color: var(--muted); font-size: 9px; line-height: 1.65; }
     .legend { display: flex; flex-wrap: wrap; gap: 13px; margin-top: 7px; }
     .legend-item { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 10px; }
@@ -302,6 +313,8 @@
       .chart-grid { grid-template-columns: 1fr; }
       .question-grid { grid-template-columns: 1fr; }
       .question-card.wide { grid-column: auto; }
+      .count-chart-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .q4-chart-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 580px) {
       .site-header { height: 64px; padding: 0 17px; }
@@ -321,6 +334,8 @@
       .panel { padding: 16px 13px; }
       .question-card { padding: 16px 13px; }
       .histogram-grid { grid-template-columns: 1fr; }
+      .count-chart-grid { grid-template-columns: 1fr; }
+      .field-count-grid { grid-template-columns: 1fr; }
       .answer-stats { gap: 6px; }
       .answer-stat { padding: 10px 8px; }
       .answer-stat-value { font-size: 19px; }
@@ -392,7 +407,7 @@
         <article class="question-card" aria-labelledby="q1-heading">
           <div class="question-title">
             <span class="question-number">Q1</span>
-            <div><h3 id="q1-heading">What is the internet access level across schools?</h3><p>Mean, maximum, and minimum internet access percentage.</p></div>
+            <div><h3 id="q1-heading">What is the internet access level across schools?</h3><p>NumPy mean, maximum, and minimum of school-level internet access percentages.</p></div>
           </div>
           <div id="q1-stats" class="answer-stats"></div>
           <div class="answer-callout" id="q1-answer" aria-live="polite"></div>
@@ -401,7 +416,7 @@
         <article class="question-card" aria-labelledby="q2-heading">
           <div class="question-title">
             <span class="question-number">Q2</span>
-            <div><h3 id="q2-heading">How are schools distributed across rural and urban areas?</h3><p>Counts and percentages are compared side by side. The location filter does not hide either group.</p></div>
+            <div><h3 id="q2-heading">How are schools distributed across rural and urban areas?</h3><p>Pandas: filter the school profile by Area into Rural and Urban groups, then compare counts and percentages. The location filter does not hide either group.</p></div>
           </div>
           <div class="chart" id="q2-chart" aria-label="Rural and urban school counts"></div>
           <div class="answer-callout" id="q2-answer" aria-live="polite"></div>
@@ -410,27 +425,42 @@
         <article class="question-card" aria-labelledby="q3-heading">
           <div class="question-title">
             <span class="question-number">Q3</span>
-            <div><h3 id="q3-heading">What happened to missing data after cleaning?</h3><p>Notebook-reported missing cells before cleaning and after imputation.</p></div>
+            <div><h3 id="q3-heading">How were missing access and resource values handled?</h3><p>Missing access-rate values are checked, and missing infrastructure/resource fields are counted before and after cleaning.</p></div>
           </div>
           <div id="q3-cleaning" class="cleaning-grid"></div>
+          <div id="q3-field-details" class="field-count-grid" aria-label="Missing values by field"></div>
           <div class="answer-callout" id="q3-answer"></div>
-          <p class="question-footnote">Before-cleaning totals are the values recorded in the notebook. The published final datasets used for the dashboard are already cleaned.</p>
+          <p class="question-footnote">Numeric infrastructure fields were filled with their column means; remaining missing infrastructure/resource values were filled with “Unknown,” matching the notebook. Access statistics are reported separately.</p>
         </article>
 
-        <article class="question-card" aria-labelledby="q4-heading">
+        <article class="question-card wide" aria-labelledby="q4-heading">
           <div class="question-title">
             <span class="question-number">Q4</span>
-            <div><h3 id="q4-heading">How do school counts vary by state and school category?</h3><p>Top states, with each bar divided by school category.</p></div>
+            <div><h3 id="q4-heading">How do access statistics vary by state and school type?</h3><p>Pandas groupby by State and School_Category; the table reports mean access/readiness scores and school counts.</p></div>
           </div>
-          <div class="chart-legend" id="q4-legend"></div>
-          <div class="chart" id="q4-chart" aria-label="State school counts split by school category"></div>
+          <div class="q4-chart-grid">
+            <section class="histogram-panel"><h4>School records by state and category</h4><div class="chart-legend" id="q4-legend"></div><div class="chart" id="q4-chart" aria-label="State school counts split by school category"></div></section>
+            <section class="histogram-panel"><h4>Highest average internet access by state and category</h4><div class="chart" id="q4-access-chart" aria-label="Highest average internet access groups by state and school category"></div></section>
+          </div>
           <div class="answer-callout" id="q4-answer" aria-live="polite"></div>
+          <div class="table-wrap">
+            <table class="answer-table">
+              <thead><tr><th>State</th><th>School category</th><th>Schools</th><th>Mean internet access (%)</th><th>Mean readiness</th><th>Mean digital literacy</th><th>Mean technology adoption</th></tr></thead>
+              <tbody id="q4-table-body"></tbody>
+            </table>
+          </div>
+          <p class="question-footnote">The table includes every state/category group. Location and category filters update the grouped statistics; “All locations” combines rural and urban records.</p>
         </article>
 
         <article class="question-card wide" aria-labelledby="q5-heading">
           <div class="question-title">
             <span class="question-number">Q5</span>
-            <div><h3 id="q5-heading">What do the digital-readiness and resource distributions look like?</h3><p>Histograms show how many school records fall into each value range.</p></div>
+            <div><h3 id="q5-heading">How can the digital divide be visualized?</h3><p>Barplots compare school counts by location, state, and category; histograms show the metric distributions.</p></div>
+          </div>
+          <div class="count-chart-grid">
+            <section class="histogram-panel"><h4>School counts by location</h4><div class="chart" id="q5-area-chart" aria-label="Barplot of school counts by rural and urban location"></div></section>
+            <section class="histogram-panel"><h4>School counts by state</h4><div class="chart" id="q5-state-chart" aria-label="Barplot of school counts by state"></div></section>
+            <section class="histogram-panel"><h4>School counts by category</h4><div class="chart" id="q5-category-chart" aria-label="Barplot of school counts by school category"></div></section>
           </div>
           <div class="histogram-grid">
             <section class="histogram-panel"><h4>Digital readiness score</h4><div class="histogram-summary" id="q5-readiness-summary"></div><div class="histogram" id="q5-readiness"></div></section>
@@ -439,7 +469,7 @@
             <section class="histogram-panel"><h4>Smart classrooms per school</h4><div class="histogram-summary" id="q5-classrooms-summary"></div><div class="histogram" id="q5-classrooms"></div></section>
           </div>
           <div class="answer-callout" id="q5-answer" aria-live="polite"></div>
-          <p class="question-footnote">Computer counts include only records with a recorded value. Each histogram uses 20 equal-width bins; filters update all four distributions.</p>
+          <p class="question-footnote">Each histogram uses 20 equal-width bins. Computer counts include the 609 missing values imputed with the observed-value mean, matching the notebook's cleaning sequence; filters update all charts.</p>
         </article>
       </div>
     </section>
@@ -880,8 +910,24 @@
           row.append(title, values);
           container.appendChild(row);
         }
+        const details = document.getElementById("q3-field-details");
+        details.replaceChildren();
+        const fieldRows = [
+          ...Object.entries(counts.fields.infrastructure),
+          ...Object.entries(counts.fields.resources)
+        ];
+        for (const [field, count] of fieldRows) {
+          const row = document.createElement("div");
+          row.className = "field-count";
+          const label = document.createElement("span");
+          label.textContent = field.replaceAll("_", " ");
+          const value = document.createElement("strong");
+          value.textContent = `${number(count)} missing`;
+          row.append(label, value);
+          details.appendChild(row);
+        }
         document.getElementById("q3-answer").textContent =
-          `Answer: the notebook reports ${number(counts.infrastructure_before + counts.resources_before)} missing values before cleaning. After imputation, both datasets have 0 missing values.`;
+          `Answer: Internet_Access_Percentage has ${number(counts.access_statistics_fields.Internet_Access_Percentage)} missing values in ${number(questionData.distribution_specs.internet_access.count)} records. The notebook reports ${number(counts.infrastructure_before)} missing infrastructure cells and ${number(counts.resources_before)} missing digital-resource cells before cleaning; after mean-imputing numeric infrastructure fields and filling remaining missing infrastructure/resource values with “Unknown,” both datasets have 0 missing values.`;
       }
 
       function renderQuestionFour(rows) {
@@ -942,16 +988,69 @@
           text(svg, number(item.total), left + plotWidth + 9, y + 10, { fill: "#46564e", "font-size": 9, "font-weight": 700 });
         });
         container.appendChild(svg);
-        const categoryTotals = categories.map(category => ({
-          category,
-          count: rows.reduce((sum, row) => sum + (row.category === category ? row.schools : 0), 0)
-        })).sort((a, b) => b.count - a.count);
-        const topState = ranked[0];
-        const topCategory = categoryTotals[0];
-        const stateSummary = questionData.state_summary;
-        const averageTeachers = stateSummary.metrics.Average_Teachers;
+        const grouped = new Map();
+        for (const item of questionData.state_category_stats) {
+          if (areaFilter.value !== "All" && item.area !== areaFilter.value) continue;
+          if (categoryFilter.value !== "All" && item.category !== categoryFilter.value) continue;
+          const key = `${item.state}\u0000${item.category}`;
+          let total = grouped.get(key);
+          if (!total) {
+            total = {
+              state: item.state,
+              category: item.category,
+              schools: item.schools,
+              metric_sums: { ...item.metric_sums },
+              metric_counts: { ...item.metric_counts }
+            };
+            grouped.set(key, total);
+          } else {
+            total.schools += item.schools;
+            for (const metric of Object.keys(total.metric_sums)) {
+              total.metric_sums[metric] += item.metric_sums[metric];
+              total.metric_counts[metric] += item.metric_counts[metric];
+            }
+          }
+        }
+        const stateCategoryRows = [...grouped.values()];
+        const accessRanked = stateCategoryRows
+          .filter(item => item.metric_counts.Internet_Access_Percentage)
+          .map(item => ({
+            name: `${item.state} · ${item.category}`,
+            value: item.metric_sums.Internet_Access_Percentage / item.metric_counts.Internet_Access_Percentage,
+            item
+          }))
+          .sort((a, b) => b.value - a.value || a.name.localeCompare(b.name))
+          .slice(0, 10);
+        renderBarChart("q4-access-chart", accessRanked, "Top ten state and school-category groups by average internet access percentage", "#26735c", { domainMax: 100, percent: true, left: 235, plotWidth: 265 });
+        const tableBody = document.getElementById("q4-table-body");
+        tableBody.replaceChildren();
+        stateCategoryRows.sort((a, b) => a.state.localeCompare(b.state) || a.category.localeCompare(b.category));
+        for (const item of stateCategoryRows) {
+          const tr = document.createElement("tr");
+          const values = [
+            item.state,
+            item.category,
+            number(item.schools),
+            `${number(item.metric_sums.Internet_Access_Percentage / item.metric_counts.Internet_Access_Percentage, 2)}%`,
+            number(item.metric_sums.Digital_Readiness_Score / item.metric_counts.Digital_Readiness_Score, 2),
+            number(item.metric_sums.Digital_Literacy_Score / item.metric_counts.Digital_Literacy_Score, 2),
+            number(item.metric_sums.Technology_Adoption_Index / item.metric_counts.Technology_Adoption_Index, 2)
+          ];
+          for (const value of values) {
+            const td = document.createElement("td");
+            td.textContent = value;
+            tr.appendChild(td);
+          }
+          tableBody.appendChild(tr);
+        }
+        if (!accessRanked.length) {
+          document.getElementById("q4-answer").textContent = "No state/category access statistics match these filters.";
+          return;
+        }
+        const highestAccess = accessRanked[0];
+        const largestGroup = [...stateCategoryRows].sort((a, b) => b.schools - a.schools || a.state.localeCompare(b.state) || a.category.localeCompare(b.category))[0];
         document.getElementById("q4-answer").textContent =
-          `Answer: ${topState.state} has the most records in the filtered sample (${number(topState.total)}). ${topCategory.category} is the largest school category in the filtered sample (${number(topCategory.count)} records). The separate state summary covers ${number(stateSummary.state_count)} states and reports an average of ${number(averageTeachers.mean, 2)} teachers per state (range ${number(averageTeachers.min, 2)}–${number(averageTeachers.max, 2)}).`;
+          `Answer: among the displayed state/category groups, ${highestAccess.item.state} · ${highestAccess.item.category} has the highest mean internet access (${number(highestAccess.value, 2)}%). The largest group by school count is ${largestGroup.state} · ${largestGroup.category} (${number(largestGroup.schools)} schools). The table reports mean access, readiness, digital-literacy, and technology-adoption values for every group.`;
       }
 
       function renderHistogram(containerId, summaryId, metric, groups) {
@@ -1032,10 +1131,24 @@
           return;
         }
         const computerSummary = computers.count
-          ? `${number(computers.count)} recorded computer counts averaged ${number(computers.sum / computers.count, 1)} computers per school (range ${number(computers.min, 1)}–${number(computers.max, 1)}).`
+          ? `${number(computers.count)} cleaned computer-count values averaged ${number(computers.sum / computers.count, 1)} computers per school (range ${number(computers.min, 1)}–${number(computers.max, 1)}).`
           : "No computer counts are recorded for the selected filters.";
         document.getElementById("q5-answer").textContent =
-          `Answer: the selected schools average ${number(readiness.sum / readiness.count, 2)} for digital readiness (range ${number(readiness.min, 2)}–${number(readiness.max, 2)}) and ${number(access.sum / access.count, 2)}% for internet access (range ${number(access.min, 2)}–${number(access.max, 2)}). ${computerSummary} Smart classrooms average ${number(classrooms.sum / classrooms.count, 1)} per school (range ${number(classrooms.min, 1)}–${number(classrooms.max, 1)}). The histograms show how those values are distributed across the sample.`;
+          `Answer: barplots compare school counts by location, state, and school category. The selected schools average ${number(readiness.sum / readiness.count, 2)} for digital readiness (range ${number(readiness.min, 2)}–${number(readiness.max, 2)}) and ${number(access.sum / access.count, 2)}% for internet access (range ${number(access.min, 2)}–${number(access.max, 2)}). ${computerSummary} Smart classrooms average ${number(classrooms.sum / classrooms.count, 1)} per school (range ${number(classrooms.min, 1)}–${number(classrooms.max, 1)}). Histograms show how these values are distributed across the sample.`;
+        const filteredRecords = records.filter(row =>
+          (areaFilter.value === "All" || row.area === areaFilter.value) &&
+          (categoryFilter.value === "All" || row.category === categoryFilter.value)
+        );
+        const countsBy = key => {
+          const totals = new Map();
+          for (const row of filteredRecords) totals.set(row[key], (totals.get(row[key]) || 0) + row.schools);
+          return [...totals.entries()]
+            .map(([name, value]) => ({ name, value }))
+            .sort((a, b) => b.value - a.value || a.name.localeCompare(b.name));
+        };
+        renderBarChart("q5-area-chart", countsBy("area"), "School counts by rural and urban location", "#26735c");
+        renderBarChart("q5-state-chart", countsBy("state"), "School counts by state", "#6b8de3");
+        renderBarChart("q5-category-chart", countsBy("category"), "School counts by school category", "#d6a741");
       }
 
       function renderReadiness(rows) {
