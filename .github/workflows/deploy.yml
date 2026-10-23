@@ -28,6 +28,7 @@ jobs:
         run: |
           mkdir -p _site
           cp index.html _site/index.html
+          cp -R data _site/data
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
