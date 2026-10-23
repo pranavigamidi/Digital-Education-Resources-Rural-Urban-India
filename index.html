@@ -730,13 +730,13 @@
           .map(([name, value]) => ({ name, value }))
           .sort((a, b) => b.value - a.value || a.name.localeCompare(b.name))
           .slice(0, 8);
-        renderBarChart("state-chart", states, "Top eight states by school record count", "#6b8de3");
+        renderLollipop("state-chart", states, "Top eight states by school record count", "#6b8de3");
         const categoryTotals = new Map();
         for (const row of rows) categoryTotals.set(row.category, (categoryTotals.get(row.category) || 0) + row.schools);
         const categories = [...categoryTotals.entries()]
           .map(([name, value]) => ({ name, value }))
           .sort((a, b) => b.value - a.value);
-        renderBarChart("category-chart", categories, "School record count by school category", "#d6a741");
+        renderCategoryDonut(categories, aggregate(rows).schools);
         renderReadiness(rows);
         renderInsight(rows);
       }
