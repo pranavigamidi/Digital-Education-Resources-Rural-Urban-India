@@ -217,7 +217,15 @@
     .chart-empty { padding: 35px 5px; color: var(--muted); font-size: 12px; text-align: center; }
     .legend { display: flex; flex-wrap: wrap; gap: 13px; margin-top: 7px; }
     .legend-item { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 10px; }
-    .legend-swatch { width: 8px; height: 8px; border-radius: 3px; }
+    .legend-swatch { width: 9px; height: 9px; border-radius: 50%; }
+    .chart-legend { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 9px; }
+    .category-layout { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr); align-items: center; gap: 12px; }
+    .donut-chart { width: 100%; max-width: 220px; margin: 0 auto; }
+    .category-legend { display: grid; gap: 12px; }
+    .category-legend-item { display: grid; grid-template-columns: 10px 1fr auto; align-items: center; gap: 8px; font-size: 10px; }
+    .category-legend-dot { width: 9px; height: 9px; border-radius: 3px; }
+    .category-legend-name { color: #526159; }
+    .category-legend-value { color: #172522; font-weight: 700; white-space: nowrap; }
     .insight {
       display: grid;
       grid-template-columns: 42px 1fr;
@@ -344,37 +352,40 @@
     <section aria-labelledby="analysis-heading">
       <div class="section-heading">
         <h2 id="analysis-heading">Access, by the numbers</h2>
-        <p>School-level measures · percent</p>
+        <p>Compare locations · explore state patterns · see the sample mix</p>
       </div>
       <div class="chart-grid">
         <article class="panel">
           <div class="panel-head">
-            <div><h3>How access compares by location</h3><p class="panel-subtitle">Facility connection and average digital access scores.</p></div>
+            <div><h3>Rural &amp; urban, side by side</h3><p class="panel-subtitle">Each line joins both location averages; the distance between dots shows the gap.</p></div>
             <span class="chart-badge">RURAL / URBAN</span>
           </div>
-          <div class="legend" id="area-legend"></div>
-          <div class="chart" id="area-chart" aria-label="Comparison of rural and urban access"></div>
+          <div class="chart-legend" id="area-legend"></div>
+          <div class="chart" id="area-chart" aria-label="Rural and urban paired-dot comparison"></div>
         </article>
         <article class="panel">
           <div class="panel-head">
-            <div><h3>Where schools appear in the sample</h3><p class="panel-subtitle">States with the most school records in the project dataset.</p></div>
+            <div><h3>School records by state</h3><p class="panel-subtitle">A ranked lollipop plot. Longer stems indicate more records in this sample.</p></div>
             <span class="chart-badge">TOP 8 STATES</span>
           </div>
-          <div class="chart" id="state-chart" aria-label="Top states by school record count"></div>
+          <div class="chart" id="state-chart" aria-label="Ranked lollipop plot of state school records"></div>
         </article>
         <article class="panel">
           <div class="panel-head">
-            <div><h3>School categories</h3><p class="panel-subtitle">Records grouped by the category listed in the school profile.</p></div>
-            <span class="chart-badge">SCHOOL PROFILE</span>
+            <div><h3>What the sample includes</h3><p class="panel-subtitle">Each segment shows a category’s share of the filtered school records.</p></div>
+            <span class="chart-badge">SAMPLE MIX</span>
           </div>
-          <div class="chart" id="category-chart" aria-label="School records by school category"></div>
+          <div class="chart category-layout">
+            <div class="donut-chart" id="category-chart" aria-label="School sample mix by category"></div>
+            <div class="category-legend" id="category-legend"></div>
+          </div>
         </article>
         <article class="panel">
           <div class="panel-head">
-            <div><h3>Learning readiness</h3><p class="panel-subtitle">Average readiness and literacy scores in the sample.</p></div>
-            <span class="chart-badge">AVERAGE SCORE</span>
+            <div><h3>Readiness across states</h3><p class="panel-subtitle">States ranked by average readiness score in the filtered sample.</p></div>
+            <span class="chart-badge">TOP 8 · / 100</span>
           </div>
-          <div class="chart" id="readiness-chart" aria-label="Readiness and literacy scores by location"></div>
+          <div class="chart" id="readiness-chart" aria-label="Ranked state digital readiness dot plot"></div>
         </article>
       </div>
     </section>
@@ -403,7 +414,9 @@
 
   <script>
     (() => {
-      const colors = ["#26735c", "#6b8de3", "#d6a741"];
+      const colors = ["#26735c", "#6b8de3", "#d6a741", "#c56b4e"];
+      const categoryColors = ["#26735c", "#6b8de3", "#d6a741", "#c56b4e"];
+      const areaColors = { Rural: "#26735c", Urban: "#6b8de3" };
       const metricLabels = [
         ["Internet at school", "internet_connected"],
         ["Internet access score", "Internet_Access_Percentage"],
@@ -502,14 +515,15 @@
       function renderLegend() {
         const legend = document.getElementById("area-legend");
         legend.replaceChildren();
-        for (let i = 0; i < metricLabels.length; i++) {
+        const visibleAreas = ["Rural", "Urban"].filter(area => areaFilter.value === "All" || areaFilter.value === area);
+        for (const area of visibleAreas) {
           const item = document.createElement("span");
           item.className = "legend-item";
           const swatch = document.createElement("span");
           swatch.className = "legend-swatch";
-          swatch.style.background = colors[i];
+          swatch.style.background = areaColors[area];
           const label = document.createElement("span");
-          label.textContent = metricLabels[i][0];
+          label.textContent = area;
           item.append(swatch, label);
           legend.appendChild(item);
         }
@@ -520,83 +534,168 @@
         container.replaceChildren();
         const selectedCategory = categoryFilter.value;
         const compareRows = records.filter(row => selectedCategory === "All" || row.category === selectedCategory);
-        const areas = ["Rural", "Urban"].filter(area => areaFilter.value === "All" || areaFilter.value === area);
-        if (!areas.length) {
+        const locations = ["Rural", "Urban"];
+        const metricRows = [
+          { label: "Internet at school", value: group => group.schools ? group.internet_connected / group.schools * 100 : 0 },
+          { label: "Internet access", value: group => mean(group, "Internet_Access_Percentage") },
+          { label: "Digital readiness", value: group => mean(group, "Digital_Readiness_Score") }
+        ];
+        const groups = Object.fromEntries(locations.map(area => {
+          const group = aggregate(compareRows.filter(row => row.area === area));
+          return [area, group];
+        }));
+        const visibleAreas = locations.filter(area => areaFilter.value === "All" || areaFilter.value === area);
+        if (!visibleAreas.some(area => groups[area].schools)) {
           container.textContent = "No school records match these filters.";
           return;
         }
-        const values = areas.map(area => {
-          const group = aggregate(compareRows.filter(row => row.area === area));
-          return {
-            name: area,
-            values: [
-              group.schools ? group.internet_connected / group.schools * 100 : 0,
-              mean(group, "Internet_Access_Percentage"),
-              mean(group, "Digital_Readiness_Score")
-            ]
-          };
-        });
         const width = 600;
-        const left = 88;
-        const plotWidth = 470;
-        const height = values.length === 1 ? 115 : 175;
-        const svg = makeSvg("svg", { viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": "Internet connection, access score, and digital readiness by location" });
-        const axisY = height - 22;
+        const left = 142;
+        const plotWidth = 330;
+        const height = 178;
+        const svg = makeSvg("svg", { viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": "Paired rural and urban comparison of school internet connection, access score, and digital readiness" });
         for (let tick = 0; tick <= 100; tick += 25) {
           const x = left + plotWidth * tick / 100;
-          svg.appendChild(makeSvg("line", { x1: x, y1: 15, x2: x, y2: axisY - 5, stroke: "#edf0ed", "stroke-width": 1 }));
-          text(svg, `${tick}`, x, height - 5, { fill: "#829088", "font-size": 9, "text-anchor": "middle" });
+          svg.appendChild(makeSvg("line", { x1: x, y1: 19, x2: x, y2: 144, stroke: "#edf0ed", "stroke-width": 1 }));
+          text(svg, `${tick}%`, x, 166, { fill: "#829088", "font-size": 9, "text-anchor": "middle" });
         }
-        values.forEach((area, areaIndex) => {
-          const baseY = 33 + areaIndex * 74;
-          text(svg, area.name, 0, baseY + 20, { fill: "#263831", "font-size": 12, "font-weight": 700 });
-          area.values.forEach((value, metricIndex) => {
-            const y = baseY + metricIndex * 14;
-            const barWidth = Math.max(0, plotWidth * Math.min(value, 100) / 100);
-            svg.appendChild(makeSvg("rect", { x: left, y, width: plotWidth, height: 8, rx: 4, fill: "#f0f3f0" }));
-            svg.appendChild(makeSvg("rect", { x: left, y, width: barWidth, height: 8, rx: 4, fill: colors[metricIndex] }));
-            text(svg, `${number(value, 1)}%`, left + plotWidth + 9, y + 8, { fill: "#64736b", "font-size": 9 });
-          });
+        metricRows.forEach((metric, index) => {
+          const y = 40 + index * 43;
+          text(svg, metric.label, left - 12, y + 4, { fill: "#46564e", "font-size": 10, "text-anchor": "end" });
+          const rural = metric.value(groups.Rural);
+          const urban = metric.value(groups.Urban);
+          const ruralX = left + plotWidth * rural / 100;
+          const urbanX = left + plotWidth * urban / 100;
+          if (groups.Rural.schools && groups.Urban.schools) {
+            svg.appendChild(makeSvg("line", { x1: Math.min(ruralX, urbanX), y1: y, x2: Math.max(ruralX, urbanX), y2: y, stroke: "#c8d1cc", "stroke-width": 3, "stroke-linecap": "round" }));
+          }
+          for (const area of visibleAreas) {
+            const group = groups[area];
+            if (!group.schools) continue;
+            const value = metric.value(group);
+            const x = left + plotWidth * value / 100;
+            svg.appendChild(makeSvg("circle", { cx: x, cy: y, r: 6, fill: areaColors[area], stroke: "#fff", "stroke-width": 2 }));
+          }
+          if (visibleAreas.length === 2 && groups.Rural.schools && groups.Urban.schools) {
+            const gap = rural - urban;
+            const gapText = `${gap > 0 ? "+" : ""}${number(gap, 1)} pp`;
+            text(svg, gapText, 493, y + 4, { fill: "#59675f", "font-size": 10, "font-weight": 700 });
+          } else {
+            const area = visibleAreas.find(location => groups[location].schools);
+            const value = metric.value(groups[area]);
+            text(svg, `${number(value, 1)}%`, 493, y + 4, { fill: areaColors[area], "font-size": 10, "font-weight": 700 });
+          }
         });
         container.appendChild(svg);
       }
 
-      function renderBarChart(containerId, items, label, color, unit = "") {
+      function renderLollipop(containerId, items, label, color, options = {}) {
         const container = document.getElementById(containerId);
         container.replaceChildren();
         if (!items.length) {
-          container.textContent = "No school records match these filters.";
+          const empty = document.createElement("div");
+          empty.className = "chart-empty";
+          empty.textContent = "No school records match these filters.";
+          container.appendChild(empty);
           return;
         }
         const width = 600;
         const left = 150;
-        const plotWidth = 370;
-        const rowHeight = 31;
-        const height = Math.max(92, items.length * rowHeight + 28);
-        const max = Math.max(1, ...items.map(item => item.value));
+        const plotWidth = 380;
+        const rowHeight = 27;
+        const height = items.length * rowHeight + 32;
+        const max = options.domainMax || Math.max(1, ...items.map(item => item.value));
         const svg = makeSvg("svg", { viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": label });
+        const axisY = height - 14;
+        for (let tickIndex = 0; tickIndex <= 4; tickIndex++) {
+          const tick = max * tickIndex / 4;
+          const x = left + plotWidth * tick / max;
+          svg.appendChild(makeSvg("line", { x1: x, y1: 5, x2: x, y2: axisY - 2, stroke: "#edf0ed", "stroke-width": 1 }));
+          text(svg, number(tick, options.percent ? 0 : 0), x, height - 1, { fill: "#829088", "font-size": 8, "text-anchor": "middle" });
+        }
         items.forEach((item, index) => {
-          const y = 17 + index * rowHeight;
+          const y = 13 + index * rowHeight;
           const barWidth = plotWidth * item.value / max;
-          text(svg, item.name, left - 11, y + 12, { fill: "#46564e", "font-size": 10, "text-anchor": "end" });
-          svg.appendChild(makeSvg("rect", { x: left, y, width: plotWidth, height: 12, rx: 6, fill: "#f0f3f0" }));
-          svg.appendChild(makeSvg("rect", { x: left, y, width: barWidth, height: 12, rx: 6, fill: color }));
-          text(svg, `${number(item.value)}${unit}`, left + plotWidth + 9, y + 10, { fill: "#64736b", "font-size": 9 });
+          text(svg, item.name, left - 11, y + 4, { fill: "#46564e", "font-size": 9, "text-anchor": "end" });
+          svg.appendChild(makeSvg("line", { x1: left, y1: y, x2: left + barWidth, y2: y, stroke: "#dfe7e1", "stroke-width": 2 }));
+          svg.appendChild(makeSvg("circle", { cx: left + barWidth, cy: y, r: 5, fill: color, stroke: "#fff", "stroke-width": 1.5 }));
+          const value = options.percent ? `${number(item.value, 1)}%` : number(item.value);
+          text(svg, value, left + plotWidth + 9, y + 4, { fill: "#46564e", "font-size": 9, "font-weight": 700 });
         });
         container.appendChild(svg);
       }
 
+      function renderCategoryDonut(items, total) {
+        const container = document.getElementById("category-chart");
+        const legend = document.getElementById("category-legend");
+        container.replaceChildren();
+        legend.replaceChildren();
+        if (!items.length || !total) {
+          const empty = document.createElement("div");
+          empty.className = "chart-empty";
+          empty.textContent = "No school records match these filters.";
+          container.appendChild(empty);
+          return;
+        }
+        const size = 220;
+        const center = size / 2;
+        const radius = 78;
+        let angle = -Math.PI / 2;
+        const svg = makeSvg("svg", { viewBox: `0 0 ${size} ${size}`, role: "img", "aria-label": "School sample share by category" });
+        items.forEach((item, index) => {
+          const fraction = item.value / total;
+          const next = angle + fraction * Math.PI * 2;
+          let path;
+          if (fraction >= 0.999999) {
+            path = makeSvg("circle", { cx: center, cy: center, r: radius, fill: categoryColors[index % categoryColors.length] });
+          } else {
+            const startX = center + radius * Math.cos(angle);
+            const startY = center + radius * Math.sin(angle);
+            const endX = center + radius * Math.cos(next);
+            const endY = center + radius * Math.sin(next);
+            const largeArc = fraction > 0.5 ? 1 : 0;
+            path = makeSvg("path", { d: `M ${center} ${center} L ${startX} ${startY} A ${radius} ${radius} 0 ${largeArc} 1 ${endX} ${endY} Z`, fill: categoryColors[index % categoryColors.length] });
+          }
+          svg.appendChild(path);
+          angle = next;
+
+          const row = document.createElement("div");
+          row.className = "category-legend-item";
+          const dot = document.createElement("span");
+          dot.className = "category-legend-dot";
+          dot.style.background = categoryColors[index % categoryColors.length];
+          const name = document.createElement("span");
+          name.className = "category-legend-name";
+          name.textContent = item.name;
+          const value = document.createElement("span");
+          value.className = "category-legend-value";
+          value.textContent = `${number(item.value)} · ${number(item.value / total * 100, 1)}%`;
+          row.append(dot, name, value);
+          legend.appendChild(row);
+        });
+        svg.appendChild(makeSvg("circle", { cx: center, cy: center, r: 52, fill: "#fff" }));
+        text(svg, number(total), center, center - 2, { fill: "#172522", "font-size": 23, "font-weight": 750, "text-anchor": "middle" });
+        text(svg, "SCHOOLS", center, center + 16, { fill: "#829088", "font-size": 8, "font-weight": 700, "letter-spacing": 1, "text-anchor": "middle" });
+        container.appendChild(svg);
+      }
+
       function renderReadiness(rows) {
-        const values = ["Rural", "Urban"]
-          .filter(area => areaFilter.value === "All" || areaFilter.value === area)
-          .map(area => {
-            const group = aggregate(rows.filter(row => row.area === area));
-            return [
-              { name: `${area} · readiness`, value: mean(group, "Digital_Readiness_Score") },
-              { name: `${area} · literacy`, value: mean(group, "Digital_Literacy_Score") }
-            ];
-          }).flat();
-        renderBarChart("readiness-chart", values, "Average readiness and digital literacy scores by location", "#26735c", " / 100");
+        const byState = new Map();
+        for (const row of rows) {
+          let group = byState.get(row.state);
+          if (!group) {
+            group = { metric_sum: 0, metric_count: 0 };
+            byState.set(row.state, group);
+          }
+          group.metric_sum += row.metric_sums.Digital_Readiness_Score;
+          group.metric_count += row.metric_counts.Digital_Readiness_Score;
+        }
+        const topStates = [...byState.entries()]
+          .filter(([, group]) => group.metric_count > 0)
+          .map(([name, group]) => ({ name, value: group.metric_sum / group.metric_count }))
+          .sort((a, b) => b.value - a.value || a.name.localeCompare(b.name))
+          .slice(0, 8);
+        renderLollipop("readiness-chart", topStates, "Top eight states by average digital readiness score", "#26735c", { domainMax: 100 });
       }
 
       function renderInsight(rows) {
