@@ -4,6 +4,32 @@ An exploratory data analysis of digital education resource availability and acce
 
 This repository also serves a standalone interactive dashboard from `index.html`, with aggregated project data in `data/dashboard-data.json`. Its “The five questions, answered” section presents NumPy internet-access statistics, Pandas-style rural/urban filtering, missing-value handling, access metrics grouped by state and school category, and barplots/histograms of the digital divide. Visitors do not need Python, Jupyter, or a local server. Student names and roll numbers are not included in the public dashboard.
 
+## Public API on GitHub Pages
+
+GitHub Pages cannot run Python server code. Instead, the Pages workflow runs the FastAPI analysis against the published aggregate data and publishes static JSON responses alongside the website. The public endpoints are read-only snapshots, regenerated whenever the workflow deploys; they do not execute Python in response to a visitor's request. They do not expose the source school-level CSV files.
+
+The dashboard fetches `api/dashboard.json` from the same GitHub Pages site. Its interactive filters continue to work in the browser using the published aggregate data.
+
+### Public static endpoints
+
+The public base URL is `https://<owner>.github.io/<repository>/api/`. For example:
+
+- `GET dashboard.json` — aggregate dataset used by the frontend.
+- `GET health.json` — publication health response.
+- `GET summary/{area}/{category}.json` — filtered totals and average access/readiness.
+- `GET questions/{area}/{category}.json` — answers and visualization data for all five questions.
+- `GET questions/{question-id}/{area}/{category}.json` — one question's answer; question ID is `1` through `5`.
+- `GET groups/{area}/{category}.json` — grouped state/category statistics.
+
+Use `all`, `rural`, or `urban` for `{area}`. Use `all`, `higher-secondary`, `primary`, `secondary`, or `upper-primary` for `{category}`. For example:
+
+```text
+https://<owner>.github.io/<repository>/api/questions/rural/primary.json
+https://<owner>.github.io/<repository>/api/questions/4/all/all.json
+```
+
+Because GitHub Pages only serves files, these are pre-generated paths rather than query-parameter endpoints; a request such as `/api/questions?area=Rural` is not dynamically filtered by GitHub.
+
 ## Python API backend
 
 The read-only FastAPI service in `backend/` uses the same published aggregate data as the dashboard and applies the notebook's NumPy/Pandas analysis for API requests. It does not expose the source school-level CSV files.
@@ -36,14 +62,12 @@ python -m unittest backend.test_api -v
 
 `area` accepts `All`, `Rural`, or `Urban`; `category` accepts `All`, `Higher Secondary`, `Primary`, `Secondary`, or `Upper Primary`.
 
-### Deploy the API
+### Run the dynamic API locally
 
-GitHub Pages cannot run Python server code, so the API must be deployed separately. The root `render.yaml` describes a free Render web service. In Render, create a new Blueprint from this repository and deploy the `schooling-connected-api` service. Render will provide its public API URL; `/docs` is the interactive API reference. Free services may sleep when idle.
-
-The FastAPI service also serves the dashboard at `/`, so a Render deployment provides a website and API on the same public URL. The GitHub Pages version tries `/api/dashboard` first and falls back to its static aggregate JSON when that API route is unavailable.
+The dynamic FastAPI service supports query-parameter filtering and interactive API docs at `/docs` when run locally or deployed to a Python hosting service. GitHub Pages publishes the static API snapshots above; it does not host this running service.
 
 ## Enable GitHub Pages
 
 In the repository, open **Settings > Pages** and select **GitHub Actions** as the build and deployment source. The `Deploy public site` workflow publishes the report whenever a commit is pushed to `main`. Once it finishes, GitHub shows the public URL under **Settings > Pages**.
 
-The website is a static dashboard: its filters and charts run in the visitor's browser using the published aggregate data. The separate Python API handles server-side analysis requests. To update the figures, regenerate `data/dashboard-data.json` from the project datasets and push the changes to `main`.
+The website and static API are published when the `Deploy public site` workflow runs. To update the figures, regenerate `data/dashboard-data.json` from the project datasets and push the changes to `main`; the workflow regenerates the API responses from that data.

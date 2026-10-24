@@ -1221,7 +1221,7 @@
 
       async function start() {
         try {
-          let response = await fetch("./api/dashboard", { cache: "no-cache" });
+          let response = await fetch("./api/dashboard.json", { cache: "no-cache" });
           if (response.status === 404) {
             response = await fetch("./data/dashboard-data.json", { cache: "no-cache" });
           }
